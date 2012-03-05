@@ -26,6 +26,7 @@
 #include <config.h>
 #include <asm/arch/s3c6400.h>
 
+#ifndef CONFIG_ARCH_NO_CPU_INIT
 	.globl mem_ctrl_asm_init
 mem_ctrl_asm_init:
 	/* DMC1 base address 0x7e001000 */
@@ -133,3 +134,4 @@ check_dmc1_ready:
 	mov	pc, lr
 
 	.ltorg
+#endif
