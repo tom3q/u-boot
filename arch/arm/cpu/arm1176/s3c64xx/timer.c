@@ -1,23 +1,8 @@
 /*
- * (C) Copyright 2003
- * Texas Instruments <www.ti.com>
- *
- * (C) Copyright 2002
- * Sysgo Real-Time Solutions, GmbH <www.elinos.com>
- * Marius Groeger <mgroeger@sysgo.de>
- *
- * (C) Copyright 2002
- * Sysgo Real-Time Solutions, GmbH <www.elinos.com>
- * Alex Zuepke <azu@sysgo.de>
- *
- * (C) Copyright 2002-2004
- * Gary Jennejohn, DENX Software Engineering, <garyj@denx.de>
- *
- * (C) Copyright 2004
- * Philippe Robin, ARM Ltd. <philippe.robin@arm.com>
- *
- * (C) Copyright 2008
- * Guennadi Liakhovetki, DENX Software Engineering, <lg@denx.de>
+ * Copyright (C) 2009 Samsung Electronics
+ * Heungjun Kim <riverful.kim@samsung.com>
+ * Inki Dae <inki.dae@samsung.com>
+ * Minkyu Kang <mk7.kang@samsung.com>
  *
  * See file CREDITS for list of people who contributed to this
  * project.
@@ -39,64 +24,29 @@
  */
 
 #include <common.h>
-#include <asm/proc-armv/ptrace.h>
-#include <asm/arch/s3c6400.h>
+#include <asm/io.h>
+#include <asm/arch/pwm.h>
+#include <asm/arch/clk.h>
 #include <div64.h>
+#include <pwm.h>
 
-static ulong timer_load_val;
+DECLARE_GLOBAL_DATA_PTR;
 
-#define PRESCALER	167
+unsigned long get_current_tick(void);
 
-static s3c64xx_timers *s3c64xx_get_base_timers(void)
+static inline struct s3c_timer *s3c_get_base_timer(void)
 {
-	return (s3c64xx_timers *)ELFIN_TIMER_BASE;
+	return (struct s3c_timer *)samsung_get_base_timer();
 }
-
-/* macro to read the 16 bit timer */
-static inline ulong read_timer(void)
-{
-	s3c64xx_timers *const timers = s3c64xx_get_base_timers();
-
-	return timers->TCNTO4;
-}
-
-/* Internal tick units */
-/* Last decremneter snapshot */
-static unsigned long lastdec;
-/* Monotonic incrementing timer */
-static unsigned long long timestamp;
 
 int timer_init(void)
 {
-	s3c64xx_timers *const timers = s3c64xx_get_base_timers();
+	/* PWM Timer 4 */
+	pwm_init(4, MUX_DIV_2, 0);
+	pwm_config(4, 0, 0);
+	pwm_enable(4);
 
-	/* use PWM Timer 4 because it has no output */
-	/*
-	 * We use the following scheme for the timer:
-	 * Prescaler is hard fixed at 167, divider at 1/4.
-	 * This gives at PCLK frequency 66MHz approx. 10us ticks
-	 * The timer is set to wrap after 100s, at 66MHz this obviously
-	 * happens after 10,000,000 ticks. A long variable can thus
-	 * keep values up to 40,000s, i.e., 11 hours. This should be
-	 * enough for most uses:-) Possible optimizations: select a
-	 * binary-friendly frequency, e.g., 1ms / 128. Also calculate
-	 * the prescaler automatically for other PCLK frequencies.
-	 */
-	timers->TCFG0 = PRESCALER << 8;
-	if (timer_load_val == 0) {
-		timer_load_val = get_PCLK() / PRESCALER * (100 / 4); /* 100s */
-		timers->TCFG1 = (timers->TCFG1 & ~0xf0000) | 0x20000;
-	}
-
-	/* load value for 10 ms timeout */
-	lastdec = timers->TCNTB4 = timer_load_val;
-	/* auto load, manual update of Timer 4 */
-	timers->TCON = (timers->TCON & ~0x00700000) | TCON_4_AUTO |
-		TCON_4_UPDATE;
-
-	/* auto load, start Timer 4 */
-	timers->TCON = (timers->TCON & ~0x00700000) | TCON_4_AUTO | COUNT_4_ON;
-	timestamp = 0;
+	reset_timer_masked();
 
 	return 0;
 }
@@ -104,57 +54,91 @@ int timer_init(void)
 /*
  * timer without interrupts
  */
-
-/*
- * This function is derived from PowerPC code (read timebase as long long).
- * On ARM it just returns the timer value.
- */
-unsigned long long get_ticks(void)
-{
-	ulong now = read_timer();
-
-	if (lastdec >= now) {
-		/* normal mode */
-		timestamp += lastdec - now;
-	} else {
-		/* we have an overflow ... */
-		timestamp += lastdec + timer_load_val - now;
-	}
-	lastdec = now;
-
-	return timestamp;
-}
-
-/*
- * This function is derived from PowerPC code (timebase clock frequency).
- * On ARM it returns the number of timer ticks per second.
- */
-ulong get_tbclk(void)
-{
-	/* We overrun in 100s */
-	return (ulong)(timer_load_val / 100);
-}
-
-ulong get_timer_masked(void)
-{
-	unsigned long long res = get_ticks();
-	do_div (res, (timer_load_val / (100 * CONFIG_SYS_HZ)));
-	return res;
-}
-
-ulong get_timer(ulong base)
+unsigned long get_timer(unsigned long base)
 {
 	return get_timer_masked() - base;
 }
 
+/* delay x useconds */
 void __udelay(unsigned long usec)
 {
-	unsigned long long tmp;
-	ulong tmo;
+	struct s3c_timer *const timer = s3c_get_base_timer();
+	unsigned long tmo, tmp, count_value;
 
-	tmo = (usec + 9) / 10;
-	tmp = get_ticks() + tmo;	/* get current timestamp */
+	count_value = readl(&timer->tcntb4);
 
-	while (get_ticks() < tmp)/* loop till event */
-		 /*NOP*/;
+	if (usec >= 1000) {
+		/*
+		 * if "big" number, spread normalization
+		 * to seconds
+		 * 1. start to normalize for usec to ticks per sec
+		 * 2. find number of "ticks" to wait to achieve target
+		 * 3. finish normalize.
+		 */
+		tmo = usec / 1000;
+		tmo *= (CONFIG_SYS_HZ * count_value);
+		tmo /= 1000;
+	} else {
+		/* else small number, don't kill it prior to HZ multiply */
+		tmo = usec * CONFIG_SYS_HZ * count_value;
+		tmo /= (1000 * 1000);
+	}
+
+	/* get current timestamp */
+	tmp = get_current_tick();
+
+	/* if setting this fordward will roll time stamp */
+	/* reset "advancing" timestamp to 0, set lastinc value */
+	/* else, set advancing stamp wake up time */
+	if ((tmo + tmp + 1) < tmp)
+		reset_timer_masked();
+	else
+		tmo += tmp;
+
+	/* loop till event */
+	while (get_current_tick() < tmo)
+		;	/* nop */
+}
+
+void reset_timer_masked(void)
+{
+	struct s3c_timer *const timer = s3c_get_base_timer();
+
+	/* reset time */
+	gd->arch.lastinc = readl(&timer->tcnto4);
+	gd->arch.tbl = 0;
+}
+
+ulong get_timer_masked(void)
+{
+	struct s3c_timer *const timer = s3c_get_base_timer();
+	unsigned long count_value = readl(&timer->tcntb4);
+
+	return get_current_tick() / count_value;
+}
+
+unsigned long get_current_tick(void)
+{
+	struct s3c_timer *const timer = s3c_get_base_timer();
+	unsigned long now = readl(&timer->tcnto4);
+	unsigned long count_value = readl(&timer->tcntb4);
+
+	if (gd->arch.lastinc >= now)
+		gd->arch.tbl += gd->arch.lastinc - now;
+	else
+		gd->arch.tbl += gd->arch.lastinc + count_value - now;
+
+	gd->arch.lastinc = now;
+
+	return gd->arch.tbl;
+}
+
+unsigned long long get_ticks(void)
+{
+	return get_timer(0);
+}
+
+unsigned long get_tbclk(void)
+{
+	return CONFIG_SYS_HZ;
 }
