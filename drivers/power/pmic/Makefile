@@ -25,6 +25,7 @@ include $(TOPDIR)/config.mk
 
 LIB	:= $(obj)libpmic.o
 
+COBJS-$(CONFIG_POWER_MAX8698) += pmic_max8698.o
 COBJS-$(CONFIG_POWER_MAX8998) += pmic_max8998.o
 COBJS-$(CONFIG_POWER_MAX8997) += pmic_max8997.o
 COBJS-$(CONFIG_POWER_MUIC_MAX8997) += muic_max8997.o
