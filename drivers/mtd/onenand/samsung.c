@@ -206,7 +206,12 @@ static void s3c_onenand_writew(unsigned short value, void __iomem *addr)
 	/* It's used for probing time */
 	switch (reg) {
 	case ONENAND_REG_SYS_CFG1:
-		writel(value, &onenand->reg->mem_cfg);
+		/*
+		 * This line was originally here,
+		 * but it seems to hang the controller.
+		 *
+		 * writel(value, &onenand->reg->mem_cfg);
+		 */
 		return;
 
 	case ONENAND_REG_START_ADDRESS1:
