@@ -555,44 +555,6 @@ static void s3c_onenand_unlock_all(struct mtd_info *mtd)
 	s3c_onenand_check_lock_status(mtd);
 }
 
-#ifdef CONFIG_S3C64XX
-static void s3c_set_width_regs(struct onenand_chip *this)
-{
-	int dev_id, density;
-	int fba, fpa, fsa;
-	int dbs_dfs;
-
-	dev_id = DEVICE_ID0_REG;
-
-	density = (dev_id >> ONENAND_DEVICE_DENSITY_SHIFT) & 0xf;
-	dbs_dfs = !!(dev_id & ONENAND_DEVICE_IS_DDP);
-
-	fba = density + 7;
-	if (dbs_dfs)
-		fba--;		/* Decrease the fba */
-	fpa = 6;
-	if (density >= ONENAND_DEVICE_DENSITY_512Mb)
-		fsa = 2;
-	else
-		fsa = 1;
-
-	DPRINTK("FBA %lu, FPA %lu, FSA %lu, DDP %lu",
-		FBA_WIDTH0_REG, FPA_WIDTH0_REG, FSA_WIDTH0_REG,
-		DDP_DEVICE_REG);
-
-	DPRINTK("mem_cfg0 0x%lx, sync mode %lu, "
-		"dev_page_size %lu, BURST LEN %lu",
-		MEM_CFG0_REG, SYNC_MODE_REG,
-		DEV_PAGE_SIZE_REG, BURST_LEN0_REG);
-
-	DEV_PAGE_SIZE_REG = 0x1;
-
-	FBA_WIDTH0_REG = fba;
-	FPA_WIDTH0_REG = fpa;
-	FSA_WIDTH0_REG = fsa;
-	DBS_DFS_WIDTH0_REG = dbs_dfs;
-}
-#endif
 
 int s5pc110_chip_probe(struct mtd_info *mtd)
 {
@@ -603,7 +565,6 @@ int s5pc210_chip_probe(struct mtd_info *mtd)
 {
 	return 0;
 }
-
 void s3c_onenand_init(struct mtd_info *mtd)
 {
 	struct onenand_chip *this = mtd->priv;
