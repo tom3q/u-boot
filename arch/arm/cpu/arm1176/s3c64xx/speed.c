@@ -130,6 +130,46 @@ ulong get_UCLK(void)
 	return get_PLLCLK(EPLL);
 }
 
+unsigned long get_mmc_clk(int dev_index)
+{
+	unsigned int tmp;
+	unsigned long freq;
+
+	tmp = CLK_SRC_REG;
+	tmp >>= 18 + 2 * dev_index;
+	tmp &= 0x3;
+
+	switch (tmp) {
+	case 0:
+		freq = get_PLLCLK(EPLL);
+		break;
+	case 1:
+		freq = get_PLLCLK(MPLL);
+		break;
+	case 2:
+		freq = CONFIG_SYS_CLK_FREQ;
+		break;
+	case 3:
+		freq = 27000000;
+		break;
+	}
+
+	tmp = CLK_DIV0_REG;
+	tmp >>= 4 * dev_index;
+	tmp &= 0xf;
+	tmp += 1;
+	freq /= tmp;
+
+	debug("%s: mmc clock = %lu\n", __func__, freq);
+
+	return freq;
+}
+
+void set_mmc_clk(int dev_index, unsigned int div)
+{
+	/* Do nothing */
+}
+
 int print_cpuinfo(void)
 {
 	printf("\nCPU:     S3C6400@%luMHz\n", get_ARMCLK() / 1000000);
