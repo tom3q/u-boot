@@ -28,6 +28,7 @@
 #define ELFIN_MMC_BASE		(0x7c200000)
 #define ELFIN_PRO_ID		(0x7e00e000)
 #define ELFIN_ONENAND_BASE	(0x70100000)
+#define ELFIN_KEYPAD_BASE	(0x7e00a000)
 
 #ifndef __ASSEMBLY__
 #define SAMSUNG_BASE(device, base)				\
@@ -45,6 +46,7 @@ SAMSUNG_BASE(timer, TIMER_BASE)
 SAMSUNG_BASE(uart, UART_BASE)
 SAMSUNG_BASE(watchdog, WATCHDOG_BASE)
 SAMSUNG_BASE(onenand, ONENAND_BASE)
+SAMSUNG_BASE(keypad, KEYPAD_BASE)
 #endif
 
 #endif	/* _S3C64XX_CPU_H */

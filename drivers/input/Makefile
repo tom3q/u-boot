@@ -33,6 +33,7 @@ COBJS-$(CONFIG_PS2MULT) += ps2mult.o ps2ser.o
 endif
 COBJS-y += input.o
 COBJS-$(CONFIG_GPIO_KEYS) += gpio_keys.o
+COBJS-$(CONFIG_SAMSUNG_KEYPAD) += samsung_keypad.o
 COBJS-$(CONFIG_OF_CONTROL) += key_matrix.o
 
 COBJS	:= $(COBJS-y)
