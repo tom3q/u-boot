@@ -97,7 +97,7 @@ extern void mdm_init(void); /* defined in board.c */
  */
 #if defined(CONFIG_BOOTDELAY) && (CONFIG_BOOTDELAY >= 0)
 # if defined(CONFIG_AUTOBOOT_KEYED)
-#ifndef CONFIG_MENU
+#if !defined(CONFIG_MENU) && !defined(CONFIG_VISUAL_MENU)
 static inline
 #endif
 int abortboot(int bootdelay)
@@ -219,7 +219,7 @@ int abortboot(int bootdelay)
 static int menukey = 0;
 #endif
 
-#ifndef CONFIG_MENU
+#if !defined(CONFIG_MENU) && !defined(CONFIG_VISUAL_MENU)
 static inline
 #endif
 int abortboot(int bootdelay)
