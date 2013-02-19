@@ -31,7 +31,7 @@ LIB	= $(obj)lib$(SOC).o
 SOBJS	= reset.o
 
 COBJS-$(CONFIG_S3C6400)	+= cpu_init.o speed.o
-COBJS-y	+= pwm.o timer.o init.o
+COBJS-y	+= pwm.o timer.o init.o system.o
 
 OBJS	:= $(addprefix $(obj),$(SOBJS) $(COBJS-y))
 

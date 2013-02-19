@@ -130,6 +130,49 @@ ulong get_UCLK(void)
 	return get_PLLCLK(EPLL);
 }
 
+unsigned long get_lcd_clk(void)
+{
+	unsigned int tmp;
+	unsigned long freq;
+
+	tmp = CLK_SRC_REG;
+	tmp >>= 26;
+	tmp &= 0x3;
+
+	switch (tmp) {
+	case 0:
+		freq = get_PLLCLK(EPLL);
+		break;
+	case 1:
+		freq = get_PLLCLK(MPLL);
+		tmp = CLK_DIV0_REG;
+		tmp >>= 4;
+		tmp &= 1;
+		tmp += 1;
+		freq /= tmp;
+		break;
+	case 2:
+		freq = CONFIG_SYS_CLK_FREQ;
+		break;
+	}
+
+	debug("%s: mout_lcd = %lu\n", __func__, freq);
+
+	tmp = CLK_DIV1_REG;
+	tmp >>= 12;
+	tmp &= 0xf;
+	tmp += 1;
+	freq /= tmp;
+
+	debug("%s: lcd clock = %lu\n", __func__, freq);
+
+	return freq;
+}
+
+void set_lcd_clk(void)
+{
+}
+
 unsigned long get_mmc_clk(int dev_index)
 {
 	unsigned int tmp;
