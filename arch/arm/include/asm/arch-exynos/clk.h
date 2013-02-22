@@ -44,4 +44,9 @@ int set_i2s_clk_prescaler(unsigned int src_frq, unsigned int dst_frq);
 int set_epll_clk(unsigned long rate);
 int set_spi_clk(int periph_id, unsigned int rate);
 
+static inline unsigned long get_mmc_clk(int dev_index)
+{
+	return 52000000;
+}
+
 #endif

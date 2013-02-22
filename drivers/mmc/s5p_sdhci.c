@@ -94,6 +94,6 @@ int s5p_sdhci_init(u32 regbase, int index, int bus_width)
 
 	host->host_caps = MMC_MODE_HC;
 
-	add_sdhci(host, 52000000, 400000);
+	add_sdhci(host, get_mmc_clk(index), 400000);
 	return 0;
 }
