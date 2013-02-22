@@ -215,7 +215,21 @@ void set_mmc_clk(int dev_index, unsigned int div)
 
 int print_cpuinfo(void)
 {
-	printf("\nCPU:     S3C6400@%luMHz\n", get_ARMCLK() / 1000000);
+	int id;
+
+	/* Look at S3C6410-like ID register first */
+	id = SYS_ID_REG;
+	if (!id) {
+		/* Fall back to S3C6400-like ID register */
+		INF_REG7_REG = 0;
+		id = INF_REG7_REG;
+	}
+
+	/* The ID looks like: x64YYxxx, where 64YY is SoC model */
+	id >>= 12;
+	id &= 0xffff;
+
+	printf("\nCPU:     S3C%x@%luMHz\n", id, get_ARMCLK() / 1000000);
 	printf("         Fclk = %luMHz, Hclk = %luMHz, Pclk = %luMHz ",
 	       get_FCLK() / 1000000, get_HCLK() / 1000000,
 	       get_PCLK() / 1000000);
