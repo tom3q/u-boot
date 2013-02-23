@@ -109,8 +109,13 @@
 #define CONFIG_CMD_DHCP
 #define CONFIG_CMD_PING
 
-#define CONFIG_BOOTDELAY	3
-
+#define CONFIG_BOOTDELAY		2
+#define CONFIG_AUTOBOOT_KEYED		/* Enable password protection	*/
+#define CONFIG_AUTOBOOT_PROMPT		\
+	"Press SPACE to abort autoboot in %d seconds\n", bootdelay
+#define CONFIG_AUTOBOOT_DELAY_STR	"12"	/* 1st "password"	*/
+#define CONFIG_AUTOBOOT_DELAY_STR2	"78"	/* 1st "password"	*/
+#define CONFIG_AUTOBOOT_STOP_STR	" "
 #define CONFIG_ZERO_BOOTDELAY_CHECK
 
 #if (CONFIG_COMMANDS & CONFIG_CMD_KGDB)
@@ -119,7 +124,7 @@
 #endif
 
 #define CONFIG_BOOTARGS			"Please use defined boot"
-#define CONFIG_BOOTCOMMAND	"run mmcboot"
+#define CONFIG_BOOTCOMMAND		"true"
 #define CONFIG_DEFAULT_CONSOLE		"console=ttySAC2,115200n8\0"
 
 #define CONFIG_ENV_UBIFS_OPTION		" rootflags=bulk_read,no_chk_data_crc "
@@ -212,14 +217,25 @@
 #define LCD_BPP				LCD_COLOR16
 #define CONFIG_LCD_LOGO
 #undef LCD_TEST_PATTERN
-#define CONFIG_LCD_INFO
-#define CONFIG_LCD_INFO_BELOW_LOGO
 #define CONFIG_SYS_WHITE_ON_BLACK
 #define CONFIG_CMD_BMP
 #define CONFIG_BMP_32BPP
 #define CONFIG_FB_ADDR			0x54504000
 #define CONFIG_VIDEO_BMP_GZIP
 #define CONFIG_SYS_VIDEO_LOGO_MAX_SIZE	((500 * 120 * 4) + (1 << 12))
-//#define CONFIG_VISUAL_MENU
+#define CONFIG_MENU_SHOW
+#define CONFIG_VISUAL_MENU
+
+#define CONFIG_MINI6410_MENU		\
+	{					\
+		.label = "Boot normal kernel",	\
+		.handler = "run normalboot",	\
+	}, {					\
+		.label = "Boot recovery kernel",\
+		.handler = "run recoveryboot",	\
+	}, {					\
+		.label = "Boot from MMC",	\
+		.handler = "run mmcboot",	\
+	},
 
 #endif	/* __CONFIG_H */

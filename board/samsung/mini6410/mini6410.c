@@ -249,4 +249,92 @@ void lcd_show_board_info(void)
 }
 #endif /* CONFIG_LCD_INFO */
 
+#include <visual_menu.h>
+#include <stdio_dev.h>
+#include <iomux.h>
+
+static int menu_read(void *priv)
+{
+	struct stdio_dev *in = priv;
+	int c;
+
+	c = in->getc();
+
+	debug("%s: c = %d\n", __func__, c);
+
+	switch (c) {
+	case '6':
+		return ACTION_UP;
+	case '5':
+		return ACTION_DOWN;
+	case '3':
+		return ACTION_ENTER;
+	case '4':
+		return ACTION_EXIT;
+	default:
+		break;
+	}
+
+	return ACTION_NONE;
+}
+
+struct mini6410_menu_item {
+	const char *label;
+	const char *handler;
+};
+
+static const struct mini6410_menu_item menu_items[] = {
+#ifdef CONFIG_MINI6410_MENU
+	CONFIG_MINI6410_MENU
+#endif
+	{
+		.label = "Start UART console",
+		.handler = "true",
+	}, {
+		.label = "Reset board",
+		.handler = "reset",
+	}
+};
+
+int menu_show(int bootdelay)
+{
+	struct mini6410_menu_item *choice;
+	struct visual_menu *m;
+	struct stdio_dev *in;
+	int err;
+	int i;
+
+	in = search_device(DEV_FLAGS_INPUT, "gpio-keys");
+	if (!in)
+		return -ENODEV;
+
+	m = visual_menu_create("Title", bootdelay, 0, menu_read, in);
+	if (!m)
+		return -ENOMEM;
+
+	for (i = 0; i < ARRAY_SIZE(menu_items); ++i) {
+		err = visual_menu_item_add(m,
+					menu_items[i].label, &menu_items[i]);
+		if (err < 0)
+			goto err_destroy;
+	}
+
+	err = visual_menu_get_choice(m, &choice);
+
+	debug("err = %d, choice = '%s'\n", err, choice->label);
+
+	if (err < 0)
+		return err;
+
+	if (choice->handler)
+		run_command(choice->handler, 0);
+
+	visual_menu_destroy(m);
+	return 0;
+
+err_destroy:
+	visual_menu_destroy(m);
+	return err;
+}
+
 #endif
