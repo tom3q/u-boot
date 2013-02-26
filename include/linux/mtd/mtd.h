@@ -10,6 +10,7 @@
 #include <linux/types.h>
 #include <div64.h>
 #include <linux/mtd/mtd-abi.h>
+#include <asm/errno.h>
 
 #define MTD_CHAR_MAJOR 90
 #define MTD_BLOCK_MAJOR 31
@@ -28,15 +29,36 @@
  */
 enum {
 	FL_READY,
-	FL_READING,
-	FL_WRITING,
+	FL_STATUS,
+	FL_CFI_QUERY,
+	FL_JEDEC_QUERY,
 	FL_ERASING,
-	FL_SYNCING,
-	FL_CACHEDPRG,
-	FL_RESETING,
-	FL_UNLOCKING,
-	FL_LOCKING,
+	FL_ERASE_SUSPENDING,
+	FL_ERASE_SUSPENDED,
+	FL_WRITING,
+	FL_WRITING_TO_BUFFER,
+	FL_OTP_WRITE,
+	FL_WRITE_SUSPENDING,
+	FL_WRITE_SUSPENDED,
 	FL_PM_SUSPENDED,
+	FL_SYNCING,
+	FL_UNLOADING,
+	FL_LOCKING,
+	FL_UNLOCKING,
+	FL_POINT,
+	FL_XIP_WHILE_ERASING,
+	FL_XIP_WHILE_WRITING,
+	FL_SHUTDOWN,
+	/* These 2 come from nand_state_t, which has been unified here */
+	FL_READING,
+	FL_CACHEDPRG,
+	/* These 4 come from onenand_state_t, which has been unified here */
+	FL_RESETING,
+	FL_OTPING,
+	FL_PREPARING_ERASE,
+	FL_VERIFYING_ERASE,
+
+	FL_UNKNOWN
 };
 
 /* If the erase fails, fail_addr might indicate exactly which block failed.  If
@@ -286,6 +308,18 @@ static inline void mtd_erase_callback(struct erase_info *instr)
 		instr->callback(instr);
 }
 #endif
+
+static inline int mtd_is_bitflip(int err) {
+	return err == -EUCLEAN;
+}
+
+static inline int mtd_is_eccerr(int err) {
+	return err == -EBADMSG;
+}
+
+static inline int mtd_is_bitflip_or_eccerr(int err) {
+	return mtd_is_bitflip(err) || mtd_is_eccerr(err);
+}
 
 /*
  * Debugging macro and defines

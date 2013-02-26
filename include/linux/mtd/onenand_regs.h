@@ -92,7 +92,7 @@
 #define ONENAND_TECHNOLOGY_IS_MLC	(1 << 0)
 
 /*
- * Start Address 1 F100h (R/W)
+ * Start Address 1 F100h (R/W) & Start Address 2 F101h (R/W)
  */
 #define ONENAND_DDP_SHIFT		(15)
 #define ONENAND_DDP_CHIP0		(0)
@@ -101,6 +101,7 @@
 /*
  * Start Address 8 F107h (R/W)
  */
+/* Note: It's actually 0x3f in case of SLC */
 #define ONENAND_FPA_MASK		(0x7f)
 #define ONENAND_FPA_SHIFT		(2)
 #define ONENAND_FSA_MASK		(0x03)
@@ -113,6 +114,7 @@
 #define ONENAND_BSA_BOOTRAM		(0 << 2)
 #define ONENAND_BSA_DATARAM0		(2 << 2)
 #define ONENAND_BSA_DATARAM1		(3 << 2)
+/* Note: It's actually 0x03 in case of SLC */
 #define ONENAND_BSC_MASK		(0x07)
 
 /*
@@ -132,8 +134,8 @@
 #define ONENAND_CMD_MULTIBLOCK_ERASE	(0x95)
 #define ONENAND_CMD_ERASE_VERIFY	(0x71)
 #define ONENAND_CMD_RESET		(0xF0)
+#define ONENAND_CMD_OTP_ACCESS		(0x65)
 #define ONENAND_CMD_READID		(0x90)
-#define FLEXONENAND_CMD_RESET		(0xF3)
 #define FLEXONENAND_CMD_PI_UPDATE	(0x05)
 #define FLEXONENAND_CMD_PI_ACCESS	(0x66)
 #define FLEXONENAND_CMD_RECOVER_LSB	(0x05)
@@ -166,6 +168,9 @@
 #define ONENAND_SYS_CFG1_INT		(1 << 6)
 #define ONENAND_SYS_CFG1_IOBE		(1 << 5)
 #define ONENAND_SYS_CFG1_RDY_CONF	(1 << 4)
+#define ONENAND_SYS_CFG1_VHF		(1 << 3)
+#define ONENAND_SYS_CFG1_HF		(1 << 2)
+#define ONENAND_SYS_CFG1_SYNC_WRITE	(1 << 1)
 
 /*
  * Controller Status Register F240h (R)
@@ -177,6 +182,8 @@
 #define ONENAND_CTRL_ERASE		(1 << 11)
 #define ONENAND_CTRL_ERROR		(1 << 10)
 #define ONENAND_CTRL_RSTB		(1 << 7)
+#define ONENAND_CTRL_OTP_L		(1 << 6)
+#define ONENAND_CTRL_OTP_BL		(1 << 5)
 
 /*
  * Interrupt Status Register F241h (R)
@@ -202,7 +209,15 @@
 #define ONENAND_ECC_1BIT_ALL		(0x5555)
 #define ONENAND_ECC_2BIT		(1 << 1)
 #define ONENAND_ECC_2BIT_ALL		(0xAAAA)
+#define FLEXONENAND_UNCORRECTABLE_ERROR	(0x1010)
+#define ONENAND_ECC_3BIT		(1 << 2)
+#define ONENAND_ECC_4BIT		(1 << 3)
 #define ONENAND_ECC_4BIT_UNCORRECTABLE	(0x1010)
-#define FLEXONENAND_UNCORRECTABLE_ERROR (0x1010)
 
-#endif				/* __ONENAND_REG_H */
+/*
+ * One-Time Programmable (OTP)
+ */
+#define FLEXONENAND_OTP_LOCK_OFFSET		(2048)
+#define ONENAND_OTP_LOCK_OFFSET		(14)
+
+#endif	/* __ONENAND_REG_H */

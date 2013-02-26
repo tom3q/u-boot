@@ -430,7 +430,7 @@ static unsigned char *s3c_get_bufferram(struct mtd_info *mtd, int area)
 	return p;
 }
 
-static int onenand_read_bufferram(struct mtd_info *mtd, loff_t addr, int area,
+static int onenand_read_bufferram(struct mtd_info *mtd, int area,
 				  unsigned char *buffer, int offset,
 				  size_t count)
 {
@@ -441,7 +441,7 @@ static int onenand_read_bufferram(struct mtd_info *mtd, loff_t addr, int area,
 	return 0;
 }
 
-static int onenand_write_bufferram(struct mtd_info *mtd, loff_t addr, int area,
+static int onenand_write_bufferram(struct mtd_info *mtd, int area,
 				   const unsigned char *buffer, int offset,
 				   size_t count)
 {
@@ -606,6 +606,4 @@ void s3c_onenand_init(struct mtd_info *mtd)
 
 	this->read_bufferram = onenand_read_bufferram;
 	this->write_bufferram = onenand_write_bufferram;
-
-	this->options |= ONENAND_RUNTIME_BADBLOCK_CHECK;
 }

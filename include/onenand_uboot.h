@@ -37,8 +37,6 @@ extern int onenand_write(struct mtd_info *mtd, loff_t from, size_t len,
 			 size_t * retlen, const u_char * buf);
 extern int onenand_erase(struct mtd_info *mtd, struct erase_info *instr);
 
-extern char *onenand_print_device_info(int device, int version);
-
 extern unsigned onenand_block(struct onenand_chip *this, loff_t addr);
 
 extern loff_t onenand_addr(struct onenand_chip *this, int block);
