@@ -246,11 +246,17 @@ static void s3c_onenand_writew(unsigned short value, void __iomem *addr)
 	s3c_write_cmd(value, CMD_MAP_11(word_addr));
 }
 
+static inline unsigned long msecs_to_ticks(unsigned long msecs)
+{
+	return (msecs * get_tbclk()) / 1000;
+}
+
 static int s3c_onenand_wait(struct mtd_info *mtd, int state)
 {
 	unsigned int flags = INT_ACT;
 	unsigned int stat, ecc;
-	unsigned long timeout = 0x100000;
+	unsigned long timeout;
+	unsigned long start;
 
 	switch (state) {
 	case FL_READING:
@@ -269,7 +275,10 @@ static int s3c_onenand_wait(struct mtd_info *mtd, int state)
 		break;
 	}
 
-	while (timeout--) {
+	/* The 20 msec is enough */
+	start = get_timer(0);
+	timeout = msecs_to_ticks(20);
+	while (get_timer(start) < timeout) {
 		stat = readl(&onenand->reg->int_err_stat);
 		if (stat & flags)
 			break;
@@ -457,9 +466,13 @@ static int s3c_onenand_bbt_wait(struct mtd_info *mtd, int state)
 	struct samsung_onenand *reg = (struct samsung_onenand *)onenand->base;
 	unsigned int flags = INT_ACT | LOAD_CMP;
 	unsigned int stat;
-	unsigned long timeout = 0x10000;
+	unsigned long timeout;
+	unsigned long start;
 
-	while (timeout--) {
+	/* The 20 msec is enough */
+	start = get_timer(0);
+	timeout = msecs_to_ticks(20);
+	while (get_timer(start) < timeout) {
 		stat = readl(&reg->int_err_stat);
 		if (stat & flags)
 			break;
