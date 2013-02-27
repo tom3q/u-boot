@@ -316,13 +316,95 @@ static int s3c_onenand_wait(struct mtd_info *mtd, int state)
 	return 0;
 }
 
+#ifdef CONFIG_SAMSUNG_ONENAND_BURST_READ
+static inline void s3c_onenand_read(struct s3c_onenand *onenand,
+				unsigned int addr, int count, unsigned int *buf)
+{
+	__asm__ (
+		"1:\n"
+		"\tldmia %1, {r0-r7}\n"
+		"\tstmia %2!, {r0-r7}\n"
+		"\tsubs %0, #1\n"
+		"\tbne 1b\n"
+		:
+		: "r"(count / 8),
+			"r"(onenand->ahb_addr + addr), "r"(buf)
+		: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7"
+	);
+}
+#else
+static inline void s3c_onenand_read(struct s3c_onenand *onenand,
+				unsigned int addr, int count, unsigned int *buf)
+{
+	int i;
+	for (i = 0; i < count; i++)
+		*buf++ = s3c_read_cmd(addr);
+}
+#endif
+
+#ifdef CONFIG_SAMSUNG_ONENAND_BURST_WRITE
+static inline void s3c_onenand_write(struct s3c_onenand *onenand,
+				unsigned int addr, int count, unsigned int *buf)
+{
+	__asm__ (
+		"1:\n"
+		"\tldmia %1!, {r0-r7}\n"
+		"\tstmia %2, {r0-r7}\n"
+		"\tsubs %0, #1\n"
+		"\tbne 1b\n"
+		:
+		: "r"(count / 8),
+			"r"(buf), "r"(onenand->ahb_addr + addr)
+		: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7"
+	);
+}
+
+static inline void s3c_onenand_dummy_write(struct s3c_onenand *onenand,
+						unsigned int addr, int count)
+{
+	__asm__ (
+		"\tmvn r0, #0\n"
+		"\tmvn r1, #0\n"
+		"\tmvn r2, #0\n"
+		"\tmvn r3, #0\n"
+		"\tmvn r4, #0\n"
+		"\tmvn r5, #0\n"
+		"\tmvn r6, #0\n"
+		"\tmvn r7, #0\n"
+		"1:\n"
+		"\tstmia %1, {r0-r7}\n"
+		"\tsubs %0, #1\n"
+		"\tbne 1b\n"
+		:
+		: "r"(count / 8), "r"(onenand->ahb_addr + addr)
+		: "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7"
+	);
+}
+#else
+static inline void s3c_onenand_write(struct s3c_onenand *onenand,
+				unsigned int addr, int count, unsigned int *buf)
+{
+	int i;
+	for (i = 0; i < count; i++)
+		s3c_write_cmd(*buf++, addr);
+}
+
+static inline void s3c_onenand_dummy_write(struct s3c_onenand *onenand,
+						unsigned int addr, int count)
+{
+	int i;
+	for (i = 0; i < count; i++)
+		s3c_write_cmd(0xffffffff, addr);
+}
+#endif
+
 static int s3c_onenand_command(struct mtd_info *mtd, int cmd,
 		loff_t addr, size_t len)
 {
 	struct onenand_chip *this = mtd->priv;
 	unsigned int *m, *s;
 	int fba, fpa, fsa = 0;
-	unsigned int mem_addr;
+	unsigned int mem_addr, cmd_map_01, cmd_map_10;
 	int i, mcount, scount;
 	int index;
 
@@ -331,6 +413,8 @@ static int s3c_onenand_command(struct mtd_info *mtd, int cmd,
 	fpa &= this->page_mask;
 
 	mem_addr = onenand->mem_addr(fba, fpa, fsa);
+	cmd_map_01 = CMD_MAP_01(mem_addr);
+	cmd_map_10 = CMD_MAP_10(mem_addr);
 
 	switch (cmd) {
 	case ONENAND_CMD_READ:
@@ -360,39 +444,32 @@ static int s3c_onenand_command(struct mtd_info *mtd, int cmd,
 	switch (cmd) {
 	case ONENAND_CMD_READ:
 		/* Main */
-		for (i = 0; i < mcount; i++)
-			*m++ = s3c_read_cmd(CMD_MAP_01(mem_addr));
+		s3c_onenand_read(onenand, cmd_map_01, mcount, m);
 		return 0;
 
 	case ONENAND_CMD_READOOB:
 		writel(TSRF, &onenand->reg->trans_spare);
-		/* Main */
-		for (i = 0; i < mcount; i++)
-			*m++ = s3c_read_cmd(CMD_MAP_01(mem_addr));
 
+		/* Main */
+		s3c_onenand_read(onenand, cmd_map_01, mcount, m);
 		/* Spare */
-		for (i = 0; i < scount; i++)
-			*s++ = s3c_read_cmd(CMD_MAP_01(mem_addr));
+		s3c_onenand_read(onenand, cmd_map_01, scount, s);
 
 		writel(0, &onenand->reg->trans_spare);
 		return 0;
 
 	case ONENAND_CMD_PROG:
 		/* Main */
-		for (i = 0; i < mcount; i++)
-			s3c_write_cmd(*m++, CMD_MAP_01(mem_addr));
+		s3c_onenand_write(onenand, cmd_map_01, mcount, m);
 		return 0;
 
 	case ONENAND_CMD_PROGOOB:
 		writel(TSRF, &onenand->reg->trans_spare);
 
 		/* Main - dummy write */
-		for (i = 0; i < mcount; i++)
-			s3c_write_cmd(0xffffffff, CMD_MAP_01(mem_addr));
-
+		s3c_onenand_dummy_write(onenand, cmd_map_01, mcount);
 		/* Spare */
-		for (i = 0; i < scount; i++)
-			s3c_write_cmd(*s++, CMD_MAP_01(mem_addr));
+		s3c_onenand_write(onenand, cmd_map_01, scount, s);
 
 		writel(0, &onenand->reg->trans_spare);
 		return 0;
