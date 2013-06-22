@@ -16,52 +16,134 @@
 #include <linux/compat.h>
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/onenand.h>
+#include <jffs2/jffs2.h>
 
 #include <asm/io.h>
+
+#if defined(CONFIG_CMD_MTDPARTS)
+/* partition handling routines */
+int mtdparts_init(void);
+int find_dev_and_part(const char *id, struct mtd_device **dev,
+		      u8 *part_num, struct part_info **part);
+#endif
 
 static struct mtd_info *mtd;
 
 static loff_t next_ofs;
 static loff_t skip_ofs;
-
-static inline int str2long(char *p, ulong *num)
+static inline int str2long(const char *p, ulong *num)
 {
 	char *endptr;
 
-	*num = simple_strtoul(p, &endptr, 16);
-	return (*p != '\0' && *endptr == '\0') ? 1 : 0;
+	*num = simple_strtoull(p, &endptr, 16);
+	return *p != '\0' && *endptr == '\0';
 }
 
-static int arg_off_size(int argc, char * const argv[], ulong *off, size_t *size)
+static int get_part(const char *partname, ulong *off, ulong *size)
 {
-	if (argc >= 1) {
-		if (!(str2long(argv[0], off))) {
-			printf("'%s' is not a number\n", argv[0]);
-			return -1;
-		}
-	} else {
-		*off = 0;
-	}
+#ifdef CONFIG_CMD_MTDPARTS
+	struct mtd_device *dev;
+	struct part_info *part;
+	u8 pnum;
+	int ret;
 
-	if (argc >= 2) {
-		if (!(str2long(argv[1], (ulong *)size))) {
-			printf("'%s' is not a number\n", argv[1]);
-			return -1;
-		}
-	} else {
-		*size = mtd->size - *off;
-	}
+	ret = mtdparts_init();
+	if (ret)
+		return ret;
 
-	if ((*off + *size) > mtd->size) {
-		printf("total chip size (0x%llx) exceeded!\n", mtd->size);
+	ret = find_dev_and_part(partname, &dev, &pnum, &part);
+	if (ret)
+		return ret;
+
+	if (dev->id->type != MTD_DEV_TYPE_ONENAND) {
+		puts("not a OneNAND device\n");
 		return -1;
 	}
 
+	*off = part->offset;
+	*size = part->size;
+
+	return 0;
+#else
+	puts("offset is not a number\n");
+	return -1;
+#endif
+}
+
+static int arg_off(int argc, char *const argv[], ulong *off, ulong *maxsize)
+{
+	int ret;
+
+	if (str2long(argv[0], off)) {
+		if (*off >= mtd->size) {
+			puts("Offset exceeds device limit\n");
+			return -1;
+		}
+
+		*maxsize = mtd->size - *off;
+		return 1;
+	}
+
+	ret = get_part(argv[0], off, maxsize);
+	if (ret < 0)
+		return ret;
+
+	if (argc >= 2) {
+		ulong tmp;
+		if (!str2long(argv[1], &tmp)) {
+			puts("offset is not a number\n");
+			return -1;
+		}
+		if (tmp >= *maxsize) {
+			puts("Offset exceeds partition size\n");
+			return -1;
+		}
+		*maxsize -= tmp;
+		*off += tmp;
+		return 2;
+	}
+
+	return 1;
+}
+
+static int arg_off_size(int argc, char *const argv[], ulong *off, ulong *size)
+{
+	int ret;
+	ulong maxsize = 0;
+
+	if (argc == 0) {
+		*off = 0;
+		*size = mtd->size;
+		goto print;
+	}
+
+	ret = arg_off(argc, argv, off, &maxsize);
+	if (ret)
+		return ret;
+	argc -= ret;
+	argv += ret;
+
+	if (!argc) {
+		*size = maxsize;
+		goto print;
+	}
+
+	if (!str2long(argv[0], size)) {
+		printf("'%s' is not a number\n", argv[1]);
+		return -1;
+	}
+
+	if (*size > maxsize) {
+		puts("Size exceeds partition or device limit\n");
+		return -1;
+	}
+
+print:
 	if (*size == mtd->size)
 		puts("whole chip\n");
 	else
-		printf("offset 0x%lx, size 0x%x\n", *off, *size);
-
+		printf("offset 0x%llx, size 0x%llx\n",
+		       (unsigned long long)*off, (unsigned long long)*size);
 	return 0;
 }
 
@@ -385,7 +467,7 @@ static int do_onenand_read(cmd_tbl_t * cmdtp, int flag, int argc, char * const a
 	char *s;
 	int oob = 0;
 	ulong addr, ofs;
-	size_t len;
+	ulong len;
 	int ret = 0;
 	size_t retlen = 0;
 
@@ -412,7 +494,7 @@ static int do_onenand_read(cmd_tbl_t * cmdtp, int flag, int argc, char * const a
 static int do_onenand_write(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
 	ulong addr, ofs;
-	size_t len;
+	ulong len;
 	int ret = 0, withoob = 0;
 	size_t retlen = 0;
 
@@ -439,7 +521,7 @@ static int do_onenand_erase(cmd_tbl_t * cmdtp, int flag, int argc, char * const 
 {
 	ulong ofs;
 	int ret = 0;
-	size_t len;
+	ulong len;
 	int force;
 
 	/*
@@ -460,6 +542,11 @@ static int do_onenand_erase(cmd_tbl_t * cmdtp, int flag, int argc, char * const 
 	}
 	printf("\nOneNAND erase: ");
 
+	if (!argc) {
+		printf("implicit full chip erase not allowed\n");
+		return 1;
+	}
+
 	/* skip first two or three arguments, look for offset and size */
 	if (arg_off_size(argc, argv, &ofs, &len) != 0)
 		return 1;
@@ -475,7 +562,7 @@ static int do_onenand_test(cmd_tbl_t * cmdtp, int flag, int argc, char * const a
 {
 	ulong ofs;
 	int ret = 0;
-	size_t len;
+	ulong len;
 
 	/*
 	 * Syntax is:
@@ -590,12 +677,13 @@ U_BOOT_CMD(
 	"OneNAND sub-system",
 	"info - show available OneNAND devices\n"
 	"onenand bad - show bad blocks\n"
-	"onenand read[.oob] addr off size\n"
-	"onenand write[.yaffs] addr off size\n"
+	"onenand read[.oob] addr [partition] off size\n"
+	"onenand write[.yaffs] addr [partition] off size\n"
 	"    read/write 'size' bytes starting at offset 'off'\n"
 	"    to/from memory address 'addr', skipping bad blocks.\n"
-	"onenand erase [force] [off size] - erase 'size' bytes from\n"
-	"onenand test [off size] - test 'size' bytes from\n"
+	"onenand erase [force] [partition] off size\n"
+	"    erase 'size' bytes from offset 'off'\n"
+	"onenand test [partition off size] - test 'size' bytes from\n"
 	"    offset 'off' (entire device if not specified)\n"
 	"onenand dump[.oob] off - dump page\n"
 	"onenand markbad off [...] - mark bad block(s) at offset (UNSAFE)"
