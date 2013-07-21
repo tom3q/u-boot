@@ -45,6 +45,7 @@
 /*
  * select serial console configuration
  */
+#define CONFIG_S5P_SERIAL
 #define CONFIG_SERIAL2			1	/* use SERIAL2 */
 #define CONFIG_BAUDRATE			115200
 

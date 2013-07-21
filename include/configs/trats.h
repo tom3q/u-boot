@@ -53,6 +53,7 @@
 #define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + (16 << 20))
 
 /* select serial console configuration */
+#define CONFIG_S5P_SERIAL
 #define CONFIG_SERIAL2			/* use SERIAL 2 */
 #define CONFIG_BAUDRATE			115200
 

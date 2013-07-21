@@ -50,6 +50,7 @@
 /*
  * select serial console configuration
  */
+#define CONFIG_S5P_SERIAL
 #define CONFIG_SERIAL0			1	/* use SERIAL 0 on SMDKC100 */
 
 /* PWM */

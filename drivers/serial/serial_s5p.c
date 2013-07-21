@@ -12,22 +12,13 @@
 #include <fdtdec.h>
 #include <linux/compiler.h>
 #include <asm/io.h>
-#include <asm/arch/uart.h>
+#include <asm/samsung-common/uart.h>
 #include <asm/arch/clk.h>
 #include <serial.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#define RX_FIFO_COUNT_MASK	0xff
-#define RX_FIFO_FULL_MASK	(1 << 8)
-#define TX_FIFO_FULL_MASK	(1 << 24)
-
-/* Information about a serial port */
-struct fdt_serial {
-	u32 base_addr;  /* address of registers in physical memory */
-	u8 port_id;     /* uart port number */
-	u8 enabled;     /* 1 if enabled, 0 if disabled */
-} config __attribute__ ((section(".data")));
+struct fdt_serial config __attribute__ ((section(".data")));
 
 static inline struct s5p_uart *s5p_get_base_uart(int dev_index)
 {
