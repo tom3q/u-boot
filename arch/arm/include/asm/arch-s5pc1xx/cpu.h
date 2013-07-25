@@ -50,15 +50,15 @@
 #ifndef __ASSEMBLY__
 #include <asm/io.h>
 /* CPU detection macros */
-extern unsigned int s5p_cpu_id;
+extern unsigned int samsung_cpu_id;
 
-static inline void s5p_set_cpu_id(void)
+static inline void samsung_set_cpu_id(void)
 {
-	s5p_cpu_id = readl(S5PC100_PRO_ID);
-	s5p_cpu_id = 0xC000 | ((s5p_cpu_id & 0x00FFF000) >> 12);
+	samsung_cpu_id = readl(S5PC100_PRO_ID);
+	samsung_cpu_id = 0xC000 | ((samsung_cpu_id & 0x00FFF000) >> 12);
 }
 
-static inline char *s5p_get_cpu_name(void)
+static inline char *samsung_get_cpu_name(void)
 {
 	return S5P_CPU_NAME;
 }
@@ -66,7 +66,7 @@ static inline char *s5p_get_cpu_name(void)
 #define IS_SAMSUNG_TYPE(type, id)			\
 static inline int cpu_is_##type(void)			\
 {							\
-	return s5p_cpu_id == id ? 1 : 0;		\
+	return samsung_cpu_id == id ? 1 : 0;		\
 }
 
 IS_SAMSUNG_TYPE(s5pc100, 0xc100)

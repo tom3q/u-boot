@@ -127,40 +127,40 @@
 #ifndef __ASSEMBLY__
 #include <asm/io.h>
 /* CPU detection macros */
-extern unsigned int s5p_cpu_id;
-extern unsigned int s5p_cpu_rev;
+extern unsigned int samsung_cpu_id;
+extern unsigned int samsung_cpu_rev;
 
 static inline int s5p_get_cpu_rev(void)
 {
-	return s5p_cpu_rev;
+	return samsung_cpu_rev;
 }
 
-static inline void s5p_set_cpu_id(void)
+static inline void samsung_set_cpu_id(void)
 {
 	unsigned int pro_id = (readl(EXYNOS4_PRO_ID) & 0x00FFF000) >> 12;
 
 	switch (pro_id) {
 	case 0x200:
 		/* Exynos4210 EVT0 */
-		s5p_cpu_id = 0x4210;
-		s5p_cpu_rev = 0;
+		samsung_cpu_id = 0x4210;
+		samsung_cpu_rev = 0;
 		break;
 	case 0x210:
 		/* Exynos4210 EVT1 */
-		s5p_cpu_id = 0x4210;
+		samsung_cpu_id = 0x4210;
 		break;
 	case 0x412:
 		/* Exynos4412 */
-		s5p_cpu_id = 0x4412;
+		samsung_cpu_id = 0x4412;
 		break;
 	case 0x520:
 		/* Exynos5250 */
-		s5p_cpu_id = 0x5250;
+		samsung_cpu_id = 0x5250;
 		break;
 	}
 }
 
-static inline char *s5p_get_cpu_name(void)
+static inline char *samsung_get_cpu_name(void)
 {
 	return EXYNOS_CPU_NAME;
 }
@@ -168,7 +168,7 @@ static inline char *s5p_get_cpu_name(void)
 #define IS_SAMSUNG_TYPE(type, id)			\
 static inline int __attribute__((no_instrument_function)) cpu_is_##type(void) \
 {							\
-	return (s5p_cpu_id >> 12) == id;		\
+	return (samsung_cpu_id >> 12) == id;		\
 }
 
 IS_SAMSUNG_TYPE(exynos4, 0x4)
@@ -178,7 +178,7 @@ IS_SAMSUNG_TYPE(exynos5, 0x5)
 static inline int __attribute__((no_instrument_function)) \
 	proid_is_##type(void)				\
 {							\
-	return s5p_cpu_id == id;			\
+	return samsung_cpu_id == id;			\
 }
 
 IS_EXYNOS_TYPE(exynos4210, 0x4210)

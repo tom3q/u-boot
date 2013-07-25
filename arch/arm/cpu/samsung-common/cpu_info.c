@@ -9,14 +9,14 @@
 #include <asm/arch/clk.h>
 
 /* Default is s5pc100 */
-unsigned int s5p_cpu_id = 0xC100;
+unsigned int samsung_cpu_id = 0xC100;
 /* Default is EVT1 */
-unsigned int s5p_cpu_rev = 1;
+unsigned int samsung_cpu_rev = 1;
 
 #ifdef CONFIG_ARCH_CPU_INIT
 int arch_cpu_init(void)
 {
-	s5p_set_cpu_id();
+	samsung_set_cpu_id();
 
 	return 0;
 }
@@ -24,7 +24,7 @@ int arch_cpu_init(void)
 
 u32 get_device_type(void)
 {
-	return s5p_cpu_id;
+	return samsung_cpu_id;
 }
 
 #ifdef CONFIG_DISPLAY_CPUINFO
@@ -32,7 +32,7 @@ int print_cpuinfo(void)
 {
 	char buf[32];
 
-	printf("CPU:\t%s%X@%sMHz\n", s5p_get_cpu_name(), s5p_cpu_id,
+	printf("CPU:\t%s%X@%sMHz\n", samsung_get_cpu_name(), samsung_cpu_id,
 	       strmhz(buf, get_arm_clk()));
 
 	return 0;
