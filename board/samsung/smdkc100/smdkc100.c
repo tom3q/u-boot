@@ -8,7 +8,7 @@
 
 #include <common.h>
 #include <asm/io.h>
-#include <asm/arch/sromc.h>
+#include <asm/samsung-common/sromc.h>
 #include <asm/arch/gpio.h>
 #include <netdev.h>
 
@@ -28,10 +28,11 @@ static void smc9115_pre_init(void)
 	s5p_gpio_cfg_pin(&gpio->k0, CONFIG_ENV_SROM_BANK, GPIO_FUNC(2));
 
 	/* Ethernet needs bus width of 16 bits */
-	smc_bw_conf = SMC_DATA16_WIDTH(CONFIG_ENV_SROM_BANK);
-	smc_bc_conf = SMC_BC_TACS(0x0) | SMC_BC_TCOS(0x4) | SMC_BC_TACC(0xe)
-			| SMC_BC_TCOH(0x1) | SMC_BC_TAH(0x4)
-			| SMC_BC_TACP(0x6) | SMC_BC_PMC(0x0);
+	smc_bw_conf = SROMC_DATA16_WIDTH(CONFIG_ENV_SROM_BANK);
+	smc_bc_conf = SROMC_BC_TACS(0x0) | SROMC_BC_TCOS(0x4)
+		| SROMC_BC_TACC(0xe) | SROMC_BC_TCOH(0x1)
+		| SROMC_BC_TAH(0x4) | SROMC_BC_TACP(0x6)
+		| SROMC_BC_PMC(0x0);
 
 	/* Select and configure the SROMC bank */
 	s5p_config_sromc(CONFIG_ENV_SROM_BANK, smc_bw_conf, smc_bc_conf);

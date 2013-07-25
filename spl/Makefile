@@ -119,7 +119,7 @@ LIBS-y += arch/$(ARCH)/imx-common/libimx-common.o
 endif
 
 ifeq ($(SOC),exynos)
-LIBS-y += $(CPUDIR)/s5p-common/libs5p-common.o
+LIBS-y += arch/$(ARCH)/cpu/samsung-common/libsamsung-common.o
 endif
 
 # Add GCC lib

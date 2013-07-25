@@ -9,7 +9,7 @@
 #include <fdtdec.h>
 #include <asm/arch/gpio.h>
 #include <asm/arch/pinmux.h>
-#include <asm/arch/sromc.h>
+#include <asm/samsung-common/sromc.h>
 
 static void exynos5_uart_config(int peripheral)
 {

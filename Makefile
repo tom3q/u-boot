@@ -331,12 +331,12 @@ ifneq (,$(filter $(SOC), mx25 mx27 mx5 mx6 mx31 mx35 mxs vf610))
 LIBS-y += arch/$(ARCH)/imx-common/libimx-common.o
 endif
 
-ifeq ($(SOC),s5pc1xx)
-LIBS-y += $(CPUDIR)/s5p-common/libs5p-common.o
+ifeq ($(VENDOR),samsung)
+ifneq ($(SOC), s3c24x0)
+LIBS-y += arch/$(ARCH)/cpu/samsung-common/libsamsung-common.o
 endif
-ifeq ($(SOC),exynos)
-LIBS-y += $(CPUDIR)/s5p-common/libs5p-common.o
 endif
+
 ifneq ($(CONFIG_TEGRA),)
 LIBS-y += arch/$(ARCH)/cpu/$(SOC)-common/lib$(SOC)-common.o
 LIBS-y += arch/$(ARCH)/cpu/tegra-common/libcputegra-common.o

@@ -10,8 +10,9 @@
 #include <errno.h>
 #include <pwm.h>
 #include <asm/io.h>
-#include <asm/arch/pwm.h>
+#include <asm/samsung-common/pwm.h>
 #include <asm/arch/clk.h>
+#include <asm/arch/cpu.h>
 
 int pwm_enable(int pwm_id)
 {

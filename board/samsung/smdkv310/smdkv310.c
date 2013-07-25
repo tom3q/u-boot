@@ -12,7 +12,7 @@
 #include <asm/arch/mmc.h>
 #include <asm/arch/periph.h>
 #include <asm/arch/pinmux.h>
-#include <asm/arch/sromc.h>
+#include <asm/samsung-common/sromc.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 struct exynos4_gpio_part1 *gpio1;

@@ -7,12 +7,12 @@
 
 include $(TOPDIR)/config.mk
 
-LIB	= $(obj)libs5p-common.o
+LIB	= $(obj)libsamsung-common.o
 
-COBJS-y		+= cpu_info.o
+COBJS-y			+= cpu_info.o
 ifndef CONFIG_SPL_BUILD
-COBJS-y		+= timer.o
-COBJS-y		+= sromc.o
+COBJS-y			+= sromc.o 
+COBJS-y			+= timer.o
 COBJS-$(CONFIG_PWM)	+= pwm.o
 endif
 

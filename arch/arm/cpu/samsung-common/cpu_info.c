@@ -32,9 +32,8 @@ int print_cpuinfo(void)
 {
 	char buf[32];
 
-	printf("CPU:\t%s%X@%sMHz\n",
-			s5p_get_cpu_name(), s5p_cpu_id,
-			strmhz(buf, get_arm_clk()));
+	printf("CPU:\t%s%X@%sMHz\n", s5p_get_cpu_name(), s5p_cpu_id,
+	       strmhz(buf, get_arm_clk()));
 
 	return 0;
 }

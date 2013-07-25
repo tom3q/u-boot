@@ -27,9 +27,14 @@
 #ifndef __ASSEMBLY__
 struct s5p_sromc {
 	unsigned int	bw;
+#if defined(CONFIG_S5PC100) || defined(CONFIG_S5PC110)
 	unsigned int	bc[4];
+#else
+	unsigned int	bc[6];
+#endif
 };
 #endif	/* __ASSEMBLY__ */
+
 
 /* Configure the Band Width and Bank Control Regs for required SROMC Bank */
 void s5p_config_sromc(u32 srom_bank, u32 srom_bw_conf, u32 srom_bc_conf);

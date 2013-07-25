@@ -18,7 +18,7 @@
 #include <asm/arch/mmc.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/power.h>
-#include <asm/arch/sromc.h>
+#include <asm/samsung-common/sromc.h>
 #include <power/pmic.h>
 #include <power/max77686_pmic.h>
 #include <tmu.h>

@@ -10,13 +10,12 @@
 #include <common.h>
 #include <div64.h>
 #include <asm/io.h>
-#include <asm/arch/pwm.h>
+#include <asm/samsung-common/pwm.h>
+#include <asm/arch/cpu.h>
 #include <asm/arch/clk.h>
 #include <pwm.h>
 
 DECLARE_GLOBAL_DATA_PTR;
-
-unsigned long get_current_tick(void);
 
 /* macro to read the 16 bit timer */
 static inline struct s5p_timer *s5p_get_base_timer(void)
