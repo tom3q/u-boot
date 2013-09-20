@@ -13,7 +13,7 @@ COBJS-y			+= cpu_info.o
 ifndef CONFIG_SPL_BUILD
 COBJS-y			+= sromc.o 
 COBJS-y			+= timer.o
-COBJS-$(CONFIG_PWM)	+= pwm.o
+COBJS-y			+= pwm.o
 endif
 
 SRCS	:= $(SOBJS:.o=.S) $(COBJS:.o=.c)
