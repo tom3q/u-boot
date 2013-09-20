@@ -14,6 +14,7 @@
 #include <asm/io.h>
 #include <asm/samsung-common/uart.h>
 #include <asm/arch/clk.h>
+#include <asm/arch/cpu.h>
 #include <serial.h>
 
 DECLARE_GLOBAL_DATA_PTR;
