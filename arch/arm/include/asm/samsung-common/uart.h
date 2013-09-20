@@ -31,7 +31,8 @@ struct s5p_uart {
 	unsigned char	res2[3];
 	unsigned int	ubrdiv;
 	union br_rest	rest;
-#if defined(CONFIG_S5PC100) || defined(CONFIG_S5PC110)
+#if defined(CONFIG_S5PC100) || defined(CONFIG_S5PC110) \
+		|| defined(CONFIG_S3C64XX)
 	unsigned char	res3[0x3d0];
 #else /* Exynos 4 and 5 */
 	unsigned char	res3[0xffd0];
@@ -41,16 +42,23 @@ struct s5p_uart {
 
 static inline int s5p_uart_divslot(void)
 {
-#if defined(CONFIG_S5PC100) || defined(CONFIG_S5PC110)
+#if defined(CONFIG_S5PC100) || defined(CONFIG_S5PC110) \
+		|| defined(CONFIG_S3C64XX)
 	return 1;
 #else /* Exynos 4 and 5 */
 	return 0;
 #endif
 }
 
+#if defined(CONFIG_S3C64XX)
+#define RX_FIFO_COUNT_MASK      0x3f
+#define RX_FIFO_FULL_MASK       (1 << 6)
+#define TX_FIFO_FULL_MASK       (1 << 14)
+#else
 #define RX_FIFO_COUNT_MASK      0xff
 #define RX_FIFO_FULL_MASK       (1 << 8)
 #define TX_FIFO_FULL_MASK       (1 << 24)
+#endif
 
 /* Information about a serial port */
 struct fdt_serial {
