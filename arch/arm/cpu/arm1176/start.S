@@ -195,12 +195,12 @@ skip_tcmdisable:
 	orr	r0, r0, #CONFIG_PERIPORT_SIZE
 	mcr	p15,0,r0,c15,c2,4
 #endif
-
+#ifndef CONFIG_SKIP_LOWLEVEL_INIT
 	/*
 	 * Go setup Memory and board specific bits prior to relocation.
 	 */
 	bl	lowlevel_init		/* go setup pll,mux,memory */
-
+#endif
 	bl	_main
 
 /*------------------------------------------------------------------------------*/
