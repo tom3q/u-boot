@@ -10,7 +10,14 @@ include $(TOPDIR)/config.mk
 LIB	= $(obj)libsamsung-common.o
 
 COBJS-y			+= cpu_info.o
-ifndef CONFIG_SPL_BUILD
+
+ifdef CONFIG_SPL_BUILD
+ifndef CONFIG_SPL_FRAMEWORK
+	MINIMAL_BUILD  = yes;
+endif
+endif
+
+ifndef MINIMAL_BUILD
 COBJS-y			+= sromc.o 
 COBJS-y			+= timer.o
 COBJS-y			+= pwm.o
