@@ -8,6 +8,7 @@
 #include <common.h>
 #include <asm/io.h>
 #include <asm/samsung-common/sromc.h>
+#include <asm/arch/cpu.h>
 
 /*
  * s5p_config_sromc() - select the proper SROMC Bank and configure the
