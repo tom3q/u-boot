@@ -118,8 +118,10 @@ ifneq ($(CONFIG_MX23)$(CONFIG_MX35),)
 LIBS-y += arch/$(ARCH)/imx-common/libimx-common.o
 endif
 
-ifeq ($(SOC),exynos)
+ifeq ($(VENDOR),samsung)
+ifneq ($(SOC), s3c24x0)
 LIBS-y += arch/$(ARCH)/cpu/samsung-common/libsamsung-common.o
+endif
 endif
 
 # Add GCC lib
